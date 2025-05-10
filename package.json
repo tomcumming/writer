@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.3"
+  },
+  "scripts": {
+    "format": "prettier -w 'package.json' 'www/*.html' 'src/**/*.ts'",
+    "serve": "esbuild src/main.ts --bundle --format=esm --outfile=www/main.js --servedir=www"
+  }
+}
