@@ -1,5 +1,5 @@
 import { downloadEntries } from "./cedict.js";
-import _x from "./components/app.js";
+import "./components/app.js";
 import * as DB from "./db.js";
 
 (self as any).testIt = async function () {

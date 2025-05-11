@@ -1,6 +1,3 @@
-// const DATA_URI = `https://tomcumming.github.io/writer/data/cedict_1_0_ts_utf-8_mdbg.txt`;
-const DATA_URI = `/data/cedict_1_0_ts_utf-8_mdbg.txt`;
-
 export type CEdictEntry = {
   simp: string;
   trad: string;
@@ -8,8 +5,8 @@ export type CEdictEntry = {
   eng: string[];
 };
 
-export async function downloadEntries(): Promise<CEdictEntry[]> {
-  const rawText = await fetch(DATA_URI).then((res) => res.text());
+export async function downloadEntries(dataUri: string): Promise<CEdictEntry[]> {
+  const rawText = await fetch(dataUri).then((res) => res.text());
 
   return rawText
     .split("\n")
