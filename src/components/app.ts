@@ -18,16 +18,22 @@ export class App extends HTMLElement {
   refresh() {
     const hash = window.location.hash;
     if (/^#?$/.test(hash)) {
-      this.renderRoute();
+      this.renderRoot();
     } else if (hash === "#import-cedict") {
       this.renderImportCEdict();
+    } else if (hash === "#writing") {
+      this.renderWriting();
     } else {
       console.error(`Unknown route`, hash);
     }
   }
 
-  renderRoute() {
+  renderRoot() {
     this.innerHTML = `<h1>Root</h1>`;
+  }
+
+  renderWriting() {
+    this.innerHTML = "<writing-writing />";
   }
 
   renderImportCEdict() {

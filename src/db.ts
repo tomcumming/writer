@@ -75,7 +75,6 @@ async function lookupWordIndex(
 
   for (const key of keys) {
     const entry = await new Promise<CEdictEntry>((res, rej) => {
-      // const req = wordIndex.get(search);
       const req = wordIndex.get(key);
       req.onsuccess = (ev) => res((req as any).result);
       req.onerror = rej;
