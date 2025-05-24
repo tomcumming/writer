@@ -1,5 +1,5 @@
-import { CEdictEntry } from "./cedict.js";
-import { insertWith, unionWith } from "./map.js";
+import { CEdictEntry } from "../cedict.js";
+import { insertWith, unionWith } from "../map.js";
 
 const WORD_INDEX = "wordIndex";
 const SIMPLIFIED_INDEX = "simplified";

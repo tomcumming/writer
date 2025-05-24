@@ -1,0 +1,27 @@
+writing-writing {
+  display: grid;
+  height: 100vh;
+  grid-template-columns: 1fr;
+  grid-template-rows: 0.25fr auto auto 0.75fr;
+
+  & > ::highlight(speech) {
+    background-color: yellow;
+  }
+
+  & > .previous {
+    display: flex;
+    flex-direction: column;
+    justify-content: end;
+
+    & > div {
+      text-align: right;
+    }
+  }
+
+  & > .text-input {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: 1fr;
+    gap: 1em;
+  }
+}

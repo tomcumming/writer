@@ -1,5 +1,5 @@
 import { downloadEntries } from "../cedict";
-import * as DB from "../db.js";
+import * as WI from "../db/word-index.js";
 import { querySelectorOrDie } from "../utils";
 
 export class App extends HTMLElement {
@@ -70,8 +70,8 @@ export class App extends HTMLElement {
         const entries = await downloadEntries(input.value);
         result.innerText = "Importing...";
         await new Promise((res) => window.requestAnimationFrame(res));
-        const db = await DB.openDb();
-        DB.writeEntries(db, entries);
+        const db = await WI.openDb();
+        WI.writeEntries(db, entries);
         result.innerText = "Import successful";
       } catch (e) {
         console.error(e);
