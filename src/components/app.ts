@@ -23,6 +23,8 @@ export class App extends HTMLElement {
       this.renderImportCEdict();
     } else if (hash === "#writing") {
       this.renderWriting();
+    } else if (hash === "#tts") {
+      this.renderTts();
     } else {
       console.error(`Unknown route`, hash);
     }
@@ -34,6 +36,10 @@ export class App extends HTMLElement {
 
   renderWriting() {
     this.innerHTML = "<writing-writing />";
+  }
+
+  renderTts() {
+    this.innerHTML = `<writing-tts-settings />`;
   }
 
   renderImportCEdict() {
