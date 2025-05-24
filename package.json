@@ -1,7 +1,8 @@
 {
   "devDependencies": {
     "prettier": "^3.5.3",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "typescript-language-server": "^4.3.4"
   },
   "scripts": {
     "format": "prettier -w 'package.json' 'www/*.html' 'src/**/*.ts'",
