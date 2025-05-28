@@ -8,20 +8,17 @@ writing-writing {
     background-color: yellow;
   }
 
-  & > .previous {
-    display: flex;
-    flex-direction: column;
-    justify-content: end;
-
-    & > div {
-      text-align: right;
-    }
-  }
-
   & > .text-input {
     display: grid;
-    grid-template-columns: auto 1fr;
+    grid-template-columns: auto 1fr auto;
     grid-template-rows: 1fr;
     gap: 1em;
+  }
+}
+
+read-along {
+  & > span.active {
+    text-decoration: underline overline var(--accent);
+    -webkit-text-decoration: underline overline var(--accent);
   }
 }

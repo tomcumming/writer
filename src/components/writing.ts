@@ -1,14 +1,12 @@
 import * as WI from "../db/word-index.js";
 import * as TTS from "../tts.js";
 import { querySelectorOrDie } from "../utils";
+import { ReadAlong } from "../components/read-along.js";
 
 export class Writing extends HTMLElement {
   connectedCallback() {
-    // TODO remove!
-    document.addEventListener(
-      "selectionchange",
-      this.onSelectionChange.bind(this),
-    );
+    // TODO store selection again to deal with safari mobile click event
+    // clearing it
 
     this.addEventListener("click", (ev) => {
       if (ev.target instanceof HTMLButtonElement && ev.target.name === "speak")
@@ -20,15 +18,11 @@ export class Writing extends HTMLElement {
 
   async refresh() {
     this.innerHTML = `
-    <div class="previous">
-      <div>
-        <span class="text">自2006年以来，丹麦已将法定退休年龄与预期寿命挂勾，并且每五年进行一次调整。目前的退休年龄为67岁，将于2030年提高至68岁，并于2035年提高至69岁。</span>
-        <button name="speak">🗣️</button>
-      </div>
-    </div>
+    <read-along text-content="自2006年以来，丹麦已将法定退休年龄与预期寿命挂勾，并且每五年进行一次调整。目前的退休年龄为67岁，将于2030年提高至68岁，并于2035年提高至69岁。"></read-along>
     <div class="text-input">
       <button>⌫</button>
       <input type="text">
+      <button name="speak">🗣️</button>
     </div>
     <div class="stroke-orders">
     </div>
@@ -54,60 +48,39 @@ export class Writing extends HTMLElement {
       this.textChangeTask = this.performTextChange();
   }
 
-  // We store the selection because safari will clear it on button click!
-  private selectionRange: undefined | Range;
-
-  onSelectionChange() {
-    const selection = self.getSelection();
-    const range =
-      selection && selection?.rangeCount > 0 && selection.anchorNode
-        ? selection.getRangeAt(0)
-        : undefined;
-    this.selectionRange =
-      range && range.startOffset < range.endOffset ? range : undefined;
-  }
-
   speak() {
     if (self.speechSynthesis.pending || self.speechSynthesis.speaking) {
       self.speechSynthesis.cancel();
       return;
     }
 
-    const textElem = querySelectorOrDie(
-      HTMLElement,
-      this,
-      ".previous > div > .text",
-    );
-    const textNode = textElem.childNodes[0] as Text;
+    const readAlong = querySelectorOrDie(ReadAlong, this, "read-along");
 
-    const originalSelectionRange = this.selectionRange;
-    const selectionRange =
-      originalSelectionRange || defaultSpeechRange(textNode);
-    const selectedText = textNode.data.substring(
-      selectionRange.startOffset,
-      selectionRange.endOffset,
-    );
+    const originalSelection = self.getSelection();
+    let selectionRange = defaultSpeechRange(readAlong);
+    if (originalSelection && originalSelection.rangeCount > 0) {
+      const range = originalSelection.getRangeAt(0);
+      if (readAlong.getSelectionOffset(range) !== undefined)
+        selectionRange = range;
+    }
+
+    const startOffset = readAlong.getSelectionOffset(selectionRange);
+    if (startOffset === undefined) {
+      debugger;
+      throw new Error(`Can't get offset from ReadAlong`);
+    }
+
+    const selectedText = selectionRange.toString();
 
     const utterance = TTS.utterance(selectedText);
     utterance.addEventListener("boundary", (ev) => {
-      const range = new Range();
-      range.setStart(textNode, selectionRange.startOffset + ev.charIndex);
-      range.setEnd(
-        textNode,
-        selectionRange.startOffset + ev.charIndex + ev.charLength,
-      );
-      const selection = self.getSelection();
-      selection?.removeAllRanges();
-      selection?.addRange(range);
+      const start = startOffset + ev.charIndex;
+      readAlong.setAttribute("range-start", String(startOffset + ev.charIndex));
+      readAlong.setAttribute("range-end", String(start + ev.charLength - 1));
     });
     utterance.addEventListener("end", () => {
-      const selection = self.getSelection();
-      if (originalSelectionRange) {
-        selection?.removeAllRanges();
-        selection?.addRange(originalSelectionRange);
-      } else {
-        selection?.removeAllRanges();
-      }
+      readAlong.removeAttribute("range-start");
+      readAlong.removeAttribute("range-end");
     });
     self.speechSynthesis.speak(utterance);
   }
@@ -143,13 +116,20 @@ export class Writing extends HTMLElement {
   }
 }
 
-function defaultSpeechRange(textNode: Text) {
+function defaultSpeechRange(elem: ReadAlong) {
   // TODO we will select the last phrase
 
   const range = new Range();
-  range.setStart(textNode, 0);
-  range.setEnd(textNode, textNode.data.length);
+  range.setStart(elem.children[0], 0);
+  const last = elem.children[elem.children.length - 1];
+  range.setEnd(last, elementTextLength(last)); // TODO get length etc
   return range;
+}
+
+function elementTextLength(elem: Element): number {
+  if (elem.childNodes.length === 1 && elem.firstChild instanceof Text)
+    return elem.firstChild.data.length;
+  else return 0;
 }
 
 self.customElements.define("writing-writing", Writing);
