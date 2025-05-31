@@ -1,6 +1,6 @@
 {
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
   };
   outputs =
     { self, nixpkgs }:
@@ -12,7 +12,7 @@
       devShells."${system}".default = pkgs.mkShell {
         packages = [
           pkgs.esbuild
-          pkgs.nodejs_23
+          pkgs.nodejs_24
         ];
       };
       formatter."${system}" = pkgs.nixfmt-rfc-style;
