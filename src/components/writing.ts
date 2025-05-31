@@ -11,6 +11,11 @@ export class Writing extends HTMLElement {
     this.addEventListener("click", (ev) => {
       if (ev.target instanceof HTMLButtonElement && ev.target.name === "speak")
         this.speak();
+      if (
+        ev.target instanceof HTMLButtonElement &&
+        ev.target.name === "back-space"
+      )
+        this.backSpace();
     });
 
     this.refresh();
@@ -20,7 +25,7 @@ export class Writing extends HTMLElement {
     this.innerHTML = `
     <read-along text-content="自2006年以来，丹麦已将法定退休年龄与预期寿命挂勾，并且每五年进行一次调整。目前的退休年龄为67岁，将于2030年提高至68岁，并于2035年提高至69岁。"></read-along>
     <div class="text-input">
-      <button>⌫</button>
+      <button name="back-space">⌫</button>
       <input type="text">
       <button name="speak">🗣️</button>
     </div>
@@ -46,6 +51,10 @@ export class Writing extends HTMLElement {
     this.inflightTextChanges.push(text);
     if (this.textChangeTask === undefined)
       this.textChangeTask = this.performTextChange();
+  }
+
+  backSpace() {
+    const readAlong = querySelectorOrDie(ReadAlong, this, "read-along");
   }
 
   speak() {
@@ -116,13 +125,41 @@ export class Writing extends HTMLElement {
   }
 }
 
-function defaultSpeechRange(elem: ReadAlong) {
-  // TODO we will select the last phrase
+function* speechRanges(
+  allText: string,
+): Generator<{ start: number; charCount: number }> {
+  const chars = Array.from(allText);
+  let charCount = 0;
+  let start = chars.length - 1;
+  let readChar = false;
+  while (start >= 0) {
+    if (/\p{Script=Han}/u.test(chars[start])) {
+      readChar = true;
+      charCount += 1;
+    } else if (!/\w/.test(chars[start])) {
+      if (readChar) {
+        yield { start: start + 1, charCount };
+        readChar = false;
+      }
+    }
+
+    start -= 1;
+  }
+
+  if (readChar) yield { start: start + 1, charCount };
+}
+
+function defaultSpeechRange(elem: ReadAlong): Range {
+  let best: undefined | { start: number; charCount: number };
+  for (const entry of speechRanges(elem.innerText)) {
+    if (best === undefined || entry.charCount <= 10) best = entry;
+    else break;
+  }
 
   const range = new Range();
-  range.setStart(elem.children[0], 0);
-  const last = elem.children[elem.children.length - 1];
-  range.setEnd(last, elementTextLength(last)); // TODO get length etc
+  range.setStart(elem.children[best?.start || 0], 0);
+  const last = elem.children[elem.children.length - 1]; // max 0?
+  range.setEnd(last, elementTextLength(last));
   return range;
 }
 
