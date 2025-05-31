@@ -1,4 +1,6 @@
-writing-writing {
+.writing {
+  touch-action: none;
+
   display: grid;
   height: 100vh;
   grid-template-columns: 1fr;
@@ -16,8 +18,17 @@ writing-writing {
   }
 }
 
-read-along {
-  & > span.active {
+.characters {
+  font-size: 1.25em;
+}
+
+.read-along {
+  display: flex;
+  flex-direction: column-reverse;
+  text-align: end;
+  overflow: hidden;
+
+  & > div > span.highlight {
     text-decoration: underline overline var(--accent);
     -webkit-text-decoration: underline overline var(--accent);
   }

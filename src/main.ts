@@ -1,4 +1,8 @@
-import "./components/app.js";
-import "./components/read-along.js";
-import "./components/tts.js";
-import "./components/writing.js";
+import "./components/tts";
+import App from "./components/app";
+import { createElement, render } from "preact";
+
+// Get them ready
+self.speechSynthesis.getVoices();
+
+render(createElement(App, {}), document.body);
