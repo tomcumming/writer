@@ -1,9 +1,15 @@
 {
   "compilerOptions": {
+    "noEmit": true,
     "strict": true,
-    "target": "esnext"
+    "target": "esnext",
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact"
   },
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "src/**/*.tsx"
   ]
 }
