@@ -952,7 +952,12 @@ function useHash() {
 function App() {
   const hash = useHash();
   if (/^#?$/.test(hash)) {
-    return /* @__PURE__ */ u3("h1", { children: "Root" });
+    return /* @__PURE__ */ u3(k, { children: [
+      /* @__PURE__ */ u3("h1", { children: "Root" }),
+      /* @__PURE__ */ u3("p", { children: /* @__PURE__ */ u3("a", { href: "#tts", children: "TTS Config" }) }),
+      /* @__PURE__ */ u3("p", { children: /* @__PURE__ */ u3("a", { href: "#import-cedict", children: "Import CEdict" }) }),
+      /* @__PURE__ */ u3("p", { children: /* @__PURE__ */ u3("a", { href: "#writing", children: "Writing" }) })
+    ] });
   } else if (hash === "#import-cedict") {
     return /* @__PURE__ */ u3(ImportCEdict, {});
   } else if (hash === "#writing") {
@@ -1003,7 +1008,7 @@ function ImportCEdict() {
       }
     ),
     /* @__PURE__ */ u3("p", { id: "cedict-import-result", children: result }),
-    /* @__PURE__ */ u3("a", { href: "/", children: "Go home" })
+    /* @__PURE__ */ u3("a", { href: "#", children: "Go home" })
   ] });
 }
 
