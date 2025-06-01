@@ -1,9 +1,16 @@
-import { useRef, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import * as WI from "../db/word-index";
 import * as WS from "../db/writing-state";
 import * as TTS from "../tts";
 import { ReadAlong, readAlongSelection } from "./read-along";
 import { Component, JSX } from "preact";
+import { CEdictEntry } from "../cedict";
+
+type Definition = {
+  subWord: boolean;
+  text: string;
+  defs: Map<number, CEdictEntry>;
+};
 
 export default function Writing() {
   const readAlongRef = useRef<Component>(null);
@@ -25,6 +32,8 @@ export default function Writing() {
     doSpeak(setHighlighted, selected, ws.previousText);
   };
 
+  const entries = useDefinitions(ws.previousText);
+
   return (
     <div class="writing">
       <ReadAlong
@@ -42,7 +51,11 @@ export default function Writing() {
         </button>
       </div>
       <div class="stroke-orders"></div>
-      <ul class="definitions"></ul>
+      <ul class="definitions">
+        {entries.map((entry, _idx) => (
+          <li className={entry.subWord ? "subword" : ""}>{entry.text}</li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -146,4 +159,77 @@ function useWritingState(): [WS.State, (s: WS.State) => void] {
       ss(s2);
     },
   ];
+}
+
+const MAX_DEFINITIONS = 20;
+
+function useDefinitions(text: string): Definition[] {
+  const [db, setDb] = useState<IDBDatabase>();
+  useEffect(() => {
+    WI.openDb().then((db) => setDb(db));
+  }, []);
+
+  const [entries, setEntries] = useState<Definition[]>([]);
+
+  const uniqueCounter = useRef(1);
+
+  useEffect(() => {
+    if (db) {
+      const db_ = db;
+      uniqueCounter.current += 1;
+      const myId = uniqueCounter.current;
+
+      async function work() {
+        let prefixes: string[] = [];
+        let used = new Set<string>();
+
+        let length = 1;
+        do {
+          const search = text.slice(text.length - length);
+          const thesePrefixes = Array.from(
+            await WI.searchPrefixes(db_, search),
+          ).sort((a, b) => a.length - b.length);
+
+          for (const prefix of thesePrefixes) {
+            if (!used.has(prefix)) {
+              prefixes.push(prefix);
+              used.add(prefix);
+            }
+          }
+
+          length += 1;
+        } while (length <= text.length && prefixes.length < MAX_DEFINITIONS);
+
+        let groups: string[][] = [];
+        for (const prefix of prefixes.slice().reverse()) {
+          if (groups.length > 0) {
+            const parent = groups[groups.length - 1][0];
+            if (parent.includes(prefix)) groups[groups.length - 1].push(prefix);
+            else groups.push([prefix]);
+          } else {
+            groups.push([prefix]);
+          }
+        }
+
+        let defs: Definition[] = [];
+        for (const group of groups.slice().reverse()) {
+          const [parent, ...children] = await Promise.all(
+            group.map(async (prefix) => ({
+              text: prefix,
+              defs: await WI.lookupEntries(db_, prefix),
+            })),
+          );
+          defs.push(
+            { ...parent, subWord: false },
+            ...children.map((child) => ({ ...child, subWord: true })),
+          );
+        }
+
+        if (myId === uniqueCounter.current) setEntries(defs);
+      }
+      work();
+    }
+  }, [text, db]);
+
+  return entries;
 }
