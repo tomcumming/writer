@@ -7,7 +7,8 @@
   "scripts": {
     "format": "prettier -w 'package.json' 'www/style/writing.css' 'www/*.html' 'src/**/*.ts' 'src/**/*.tsx'",
     "serve": "esbuild src/main.ts --bundle --format=esm --outfile=www/main.js --servedir=www",
-    "check": "tsc -p tsconfig.json"
+    "check": "tsc -p tsconfig.json",
+    "bundle": "esbuild src/main.ts --bundle --format=esm --outfile=www/main.js"
   },
   "dependencies": {
     "preact": "^10.26.8"
