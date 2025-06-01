@@ -20,7 +20,20 @@ export default function App() {
   const hash = useHash();
 
   if (/^#?$/.test(hash)) {
-    return <h1>Root</h1>;
+    return (
+      <>
+        <h1>Root</h1>
+        <p>
+          <a href="#tts">TTS Config</a>
+        </p>
+        <p>
+          <a href="#import-cedict">Import CEdict</a>
+        </p>
+        <p>
+          <a href="#writing">Writing</a>
+        </p>
+      </>
+    );
   } else if (hash === "#import-cedict") {
     return <ImportCEdict />;
   } else if (hash === "#writing") {
@@ -69,7 +82,7 @@ function ImportCEdict() {
         Import
       </button>
       <p id="cedict-import-result">{result}</p>
-      <a href="/">Go home</a>
+      <a href="#">Go home</a>
     </>
   );
 }
