@@ -4,7 +4,7 @@ import * as WS from "../db/writing-state";
 import * as TTS from "../tts";
 import { ReadAlong, readAlongSelection } from "./read-along";
 import { Component, JSX } from "preact";
-import { CEdictEntry } from "../cedict";
+import { CEdictEntry, orderEntries } from "../cedict";
 
 type Definition = {
   subWord: boolean;
@@ -12,7 +12,7 @@ type Definition = {
   defs: Map<number, CEdictEntry>;
 };
 
-export default function Writing() {
+export default function Writing(): JSX.Element {
   const readAlongRef = useRef<Component>(null);
   const [highlighted, setHighlighted] = useState<
     undefined | { start: number; length: number }
@@ -53,10 +53,42 @@ export default function Writing() {
       <div class="stroke-orders"></div>
       <ul class="definitions">
         {entries.map((entry, _idx) => (
-          <li className={entry.subWord ? "subword" : ""}>{entry.text}</li>
+          <DefinitionItem definition={entry} />
         ))}
       </ul>
     </div>
+  );
+}
+
+function DefinitionItem({
+  definition,
+}: {
+  definition: Definition;
+}): JSX.Element {
+  const otherReps = Array.from(
+    new Set(
+      definition.defs
+        .values()
+        .flatMap((d) => [d.simp, d.trad])
+        .filter((r) => r !== definition.text),
+    ),
+  );
+
+  const translations = orderEntries(
+    Array.from(definition.defs.values().flatMap((d) => d.eng)),
+  );
+
+  const pinyins = concisePinyins(
+    Array.from(definition.defs.values().map((d) => d.pinyin)),
+  );
+
+  return (
+    <li className={definition.subWord ? "subword" : ""}>
+      <div className="characters">{definition.text}</div>
+      <div className="alternate">{otherReps.join(" / ")}</div>
+      <div className="pinyin">{pinyins}</div>
+      <div className="translations">{translations.join("; ")}</div>
+    </li>
   );
 }
 
@@ -232,4 +264,15 @@ function useDefinitions(text: string): Definition[] {
   }, [text, db]);
 
   return entries;
+}
+
+function concisePinyins(pinyins: string[]): string {
+  return pinyins
+    .slice(0, 3)
+    .map((py, idx) => {
+      if (idx === 0) return py;
+      if (idx === 1) return "; " + py;
+      return "…";
+    })
+    .join("");
 }

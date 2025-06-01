@@ -16,6 +16,42 @@
     grid-template-rows: 1fr;
     gap: 1em;
   }
+
+  & > .definitions {
+    overflow-y: scroll;
+    display: grid;
+    grid-template-columns: auto auto auto 1fr;
+    gap: 0.1em 0.5em;
+
+    & > li {
+      display: grid;
+      grid-column: 1 / -1;
+      grid-template-columns: subgrid;
+      align-items: center;
+
+      &:nth-child(even) {
+        background-color: var(--accent-bg);
+      }
+
+      &.subword {
+        padding-left: 1em;
+        font-size: 0.8em;
+        & > * {
+          opacity: 0.75;
+        }
+      }
+
+      & > .pinyin {
+        font-size: 0.8em;
+      }
+
+      & > .translations {
+        overflow: hidden;
+        text-wrap-mode: nowrap;
+        text-overflow: ellipsis;
+      }
+    }
+  }
 }
 
 .characters {
