@@ -6,8 +6,11 @@ import { ReadAlong, readAlongSelection } from "./read-along";
 import { Component, JSX } from "preact";
 import { CEdictEntry, orderEntries } from "../cedict";
 
+type DefinitionGroup = Definition & {
+  children: Definition[];
+};
+
 type Definition = {
-  subWord: boolean;
   text: string;
   defs: Map<number, CEdictEntry>;
 };
@@ -60,10 +63,14 @@ export default function Writing(): JSX.Element {
   );
 }
 
-function DefinitionItem({
+function DefinitionRow({
   definition,
+  button,
+  subWord,
 }: {
   definition: Definition;
+  button?: JSX.Element;
+  subWord?: boolean;
 }): JSX.Element {
   const otherReps = Array.from(
     new Set(
@@ -86,18 +93,54 @@ function DefinitionItem({
     self.speechSynthesis.cancel();
     self.speechSynthesis.speak(TTS.utterance(definition.text));
   };
+  return (
+    <li className={subWord ? "subword" : ""}>
+      <div>
+        <div className="characters clickable" onClick={speakWord}>
+          {definition.text}
+        </div>
+        <div className="alternate clickable" onClick={speakWord}>
+          {otherReps.join(" / ")}
+        </div>
+        <div className="pinyin">{pinyins}</div>
+        <div>{button}</div>
+      </div>
+      <div>
+        <div className="translations">{translations.join("; ")}</div>
+      </div>
+    </li>
+  );
+}
+
+function DefinitionItem({
+  definition,
+}: {
+  definition: DefinitionGroup;
+}): JSX.Element {
+  const [expanded, setExpanded] = useState(false);
 
   return (
-    <li className={definition.subWord ? "subword" : ""}>
-      <div className="characters clickable" onClick={speakWord}>
-        {definition.text}
-      </div>
-      <div className="alternate clickable" onClick={speakWord}>
-        {otherReps.join(" / ")}
-      </div>
-      <div className="pinyin">{pinyins}</div>
-      <div className="translations">{translations.join("; ")}</div>
-    </li>
+    <>
+      <DefinitionRow
+        definition={definition}
+        button={
+          definition.children.length > 0 ? (
+            <button
+              className="toggle-children"
+              onClick={() => setExpanded(!expanded)}
+            >
+              {expanded ? "- Children" : "+ Children"}
+            </button>
+          ) : undefined
+        }
+      />
+
+      {expanded
+        ? definition.children.map((c) => (
+            <DefinitionRow definition={c} subWord />
+          ))
+        : undefined}
+    </>
   );
 }
 
@@ -204,13 +247,13 @@ function useWritingState(): [WS.State, (s: WS.State) => void] {
 
 const MAX_DEFINITIONS = 20;
 
-function useDefinitions(text: string): Definition[] {
+function useDefinitions(text: string): DefinitionGroup[] {
   const [db, setDb] = useState<IDBDatabase>();
   useEffect(() => {
     WI.openDb().then((db) => setDb(db));
   }, []);
 
-  const [entries, setEntries] = useState<Definition[]>([]);
+  const [entries, setEntries] = useState<DefinitionGroup[]>([]);
 
   const uniqueCounter = useRef(1);
 
@@ -252,7 +295,7 @@ function useDefinitions(text: string): Definition[] {
           }
         }
 
-        let defs: Definition[] = [];
+        let defs: DefinitionGroup[] = [];
         for (const group of groups.slice().reverse()) {
           const [parent, ...children] = await Promise.all(
             group.map(async (prefix) => ({
@@ -260,10 +303,8 @@ function useDefinitions(text: string): Definition[] {
               defs: await WI.lookupEntries(db_, prefix),
             })),
           );
-          defs.push(
-            { ...parent, subWord: false },
-            ...children.map((child) => ({ ...child, subWord: true })),
-          );
+
+          defs.push({ ...parent, children });
         }
 
         if (myId === uniqueCounter.current) setEntries(defs);

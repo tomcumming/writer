@@ -20,7 +20,7 @@
   & > .definitions {
     overflow-y: scroll;
     display: grid;
-    grid-template-columns: auto auto auto 1fr;
+    grid-template-columns: auto auto 1fr auto;
     gap: 0.1em 0.5em;
 
     & > li {
@@ -41,18 +41,34 @@
         }
       }
 
-      & > .pinyin {
-        font-size: 0.8em;
-      }
+      & > div {
+        display: grid;
+        grid-column: 1 / -1;
+        grid-template-columns: subgrid;
+        align-items: center;
 
-      & > .translations {
-        overflow: hidden;
-        text-wrap-mode: nowrap;
-        text-overflow: ellipsis;
-      }
+        & > .pinyin {
+          font-size: 0.8em;
+        }
 
-      & > .clickable {
-        cursor: pointer;
+        & > .clickable {
+          cursor: pointer;
+        }
+
+        & > .translations {
+          grid-column-start: 1;
+          grid-column-end: 4;
+
+          overflow: hidden;
+          text-wrap-mode: nowrap;
+          text-overflow: ellipsis;
+        }
+
+        & > * > button.toggle-children {
+          font-size: 0.75em;
+          padding: 0.25em;
+          margin: 0;
+        }
       }
     }
   }
