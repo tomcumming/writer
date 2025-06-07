@@ -776,8 +776,10 @@ function Writing() {
     /* @__PURE__ */ u3("ul", { class: "definitions", children: entries.map((entry, _idx) => /* @__PURE__ */ u3(DefinitionItem, { definition: entry })) })
   ] });
 }
-function DefinitionItem({
-  definition
+function DefinitionRow({
+  definition,
+  button,
+  subWord
 }) {
   const otherReps = Array.from(
     new Set(
@@ -790,11 +792,40 @@ function DefinitionItem({
   const pinyins = concisePinyins(
     Array.from(definition.defs.values().map((d3) => d3.pinyin))
   );
-  return /* @__PURE__ */ u3("li", { className: definition.subWord ? "subword" : "", children: [
-    /* @__PURE__ */ u3("div", { className: "characters", children: definition.text }),
-    /* @__PURE__ */ u3("div", { className: "alternate", children: otherReps.join(" / ") }),
-    /* @__PURE__ */ u3("div", { className: "pinyin", children: pinyins }),
-    /* @__PURE__ */ u3("div", { className: "translations", children: translations.join("; ") })
+  const speakWord = () => {
+    self.speechSynthesis.cancel();
+    self.speechSynthesis.speak(utterance(definition.text));
+  };
+  return /* @__PURE__ */ u3("li", { className: subWord ? "subword" : "", children: [
+    /* @__PURE__ */ u3("div", { children: [
+      /* @__PURE__ */ u3("div", { className: "characters clickable", onClick: speakWord, children: definition.text }),
+      /* @__PURE__ */ u3("div", { className: "alternate clickable", onClick: speakWord, children: otherReps.join(" / ") }),
+      /* @__PURE__ */ u3("div", { className: "pinyin", children: pinyins }),
+      /* @__PURE__ */ u3("div", { children: button })
+    ] }),
+    /* @__PURE__ */ u3("div", { children: /* @__PURE__ */ u3("div", { className: "translations", children: translations.join("; ") }) })
+  ] });
+}
+function DefinitionItem({
+  definition
+}) {
+  const [expanded, setExpanded] = d2(false);
+  return /* @__PURE__ */ u3(k, { children: [
+    /* @__PURE__ */ u3(
+      DefinitionRow,
+      {
+        definition,
+        button: definition.children.length > 0 ? /* @__PURE__ */ u3(
+          "button",
+          {
+            className: "toggle-children",
+            onClick: () => setExpanded(!expanded),
+            children: expanded ? "- Children" : "+ Children"
+          }
+        ) : void 0
+      }
+    ),
+    expanded ? definition.children.map((c3) => /* @__PURE__ */ u3(DefinitionRow, { definition: c3, subWord: true })) : void 0
   ] });
 }
 var MAX_PREVIOUS_LENGTH = 500;
@@ -919,10 +950,7 @@ function useDefinitions(text) {
               defs: await lookupEntries(db_, prefix)
             }))
           );
-          defs.push(
-            { ...parent, subWord: false },
-            ...children.map((child) => ({ ...child, subWord: true }))
-          );
+          defs.push({ ...parent, children });
         }
         if (myId === uniqueCounter.current) setEntries(defs);
       }
