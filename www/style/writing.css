@@ -50,6 +50,10 @@
         text-wrap-mode: nowrap;
         text-overflow: ellipsis;
       }
+
+      & > .clickable {
+        cursor: pointer;
+      }
     }
   }
 }

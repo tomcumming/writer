@@ -82,10 +82,19 @@ function DefinitionItem({
     Array.from(definition.defs.values().map((d) => d.pinyin)),
   );
 
+  const speakWord = () => {
+    self.speechSynthesis.cancel();
+    self.speechSynthesis.speak(TTS.utterance(definition.text));
+  };
+
   return (
     <li className={definition.subWord ? "subword" : ""}>
-      <div className="characters">{definition.text}</div>
-      <div className="alternate">{otherReps.join(" / ")}</div>
+      <div className="characters clickable" onClick={speakWord}>
+        {definition.text}
+      </div>
+      <div className="alternate clickable" onClick={speakWord}>
+        {otherReps.join(" / ")}
+      </div>
       <div className="pinyin">{pinyins}</div>
       <div className="translations">{translations.join("; ")}</div>
     </li>
