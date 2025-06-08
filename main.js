@@ -828,12 +828,27 @@ function DefinitionItem({
     expanded ? definition.children.map((c3) => /* @__PURE__ */ u3(DefinitionRow, { definition: c3, subWord: true })) : void 0
   ] });
 }
+async function speakIfWordEntered(longText) {
+  const db = await openDb();
+  let shortText = longText.slice(-8);
+  while (shortText.length > 0) {
+    const defs = await lookupEntries(db, shortText);
+    if (defs.size > 0) break;
+    shortText = shortText.slice(1);
+  }
+  if (shortText.length > 0) {
+    self.speechSynthesis.cancel();
+    self.speechSynthesis.speak(utterance(shortText));
+  }
+}
 var MAX_PREVIOUS_LENGTH = 500;
 function doChangeText(ws, setWs) {
   return function(ev) {
     if (!ev.isComposing || ev.inputType === "insertFromComposition") {
       const input = ev.currentTarget;
+      if (input.value === "") return;
       const newText = ws.previousText + input.value;
+      speakIfWordEntered(newText);
       setWs({
         ...ws,
         previousText: newText.slice(
