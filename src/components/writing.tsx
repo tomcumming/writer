@@ -144,19 +144,24 @@ function DefinitionItem({
   );
 }
 
-async function speakIfWordEntered(longText: string) {
+async function speakIfWordEntered(entered: string, previousText: string) {
   const db = await WI.openDb();
 
-  let shortText = longText.slice(-8);
+  let shortText = previousText.slice(-8);
   while (shortText.length > 0) {
     const defs = await WI.lookupEntries(db, shortText);
     if (defs.size > 0) break;
     shortText = shortText.slice(1);
   }
 
-  if (shortText.length > 0) {
+  const spoken =
+    entered.length > shortText.length && /\p{Script=Han}/u.test(entered)
+      ? entered
+      : shortText;
+
+  if (spoken.length > 0) {
     self.speechSynthesis.cancel();
-    self.speechSynthesis.speak(TTS.utterance(shortText));
+    self.speechSynthesis.speak(TTS.utterance(spoken));
   }
 }
 
@@ -172,7 +177,7 @@ function doChangeText(
       if (input.value === "") return;
 
       const newText = ws.previousText + input.value;
-      speakIfWordEntered(newText);
+      speakIfWordEntered(input.value, newText);
       setWs({
         ...ws,
         previousText: newText.slice(
