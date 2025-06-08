@@ -828,17 +828,18 @@ function DefinitionItem({
     expanded ? definition.children.map((c3) => /* @__PURE__ */ u3(DefinitionRow, { definition: c3, subWord: true })) : void 0
   ] });
 }
-async function speakIfWordEntered(longText) {
+async function speakIfWordEntered(entered, previousText) {
   const db = await openDb();
-  let shortText = longText.slice(-8);
+  let shortText = previousText.slice(-8);
   while (shortText.length > 0) {
     const defs = await lookupEntries(db, shortText);
     if (defs.size > 0) break;
     shortText = shortText.slice(1);
   }
-  if (shortText.length > 0) {
+  const spoken = entered.length > shortText.length && /\p{Script=Han}/u.test(entered) ? entered : shortText;
+  if (spoken.length > 0) {
     self.speechSynthesis.cancel();
-    self.speechSynthesis.speak(utterance(shortText));
+    self.speechSynthesis.speak(utterance(spoken));
   }
 }
 var MAX_PREVIOUS_LENGTH = 500;
@@ -848,7 +849,7 @@ function doChangeText(ws, setWs) {
       const input = ev.currentTarget;
       if (input.value === "") return;
       const newText = ws.previousText + input.value;
-      speakIfWordEntered(newText);
+      speakIfWordEntered(input.value, newText);
       setWs({
         ...ws,
         previousText: newText.slice(
