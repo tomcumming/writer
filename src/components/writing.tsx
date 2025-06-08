@@ -144,6 +144,22 @@ function DefinitionItem({
   );
 }
 
+async function speakIfWordEntered(longText: string) {
+  const db = await WI.openDb();
+
+  let shortText = longText.slice(-8);
+  while (shortText.length > 0) {
+    const defs = await WI.lookupEntries(db, shortText);
+    if (defs.size > 0) break;
+    shortText = shortText.slice(1);
+  }
+
+  if (shortText.length > 0) {
+    self.speechSynthesis.cancel();
+    self.speechSynthesis.speak(TTS.utterance(shortText));
+  }
+}
+
 const MAX_PREVIOUS_LENGTH = 500;
 
 function doChangeText(
@@ -153,7 +169,10 @@ function doChangeText(
   return function (ev) {
     if (!ev.isComposing || ev.inputType === "insertFromComposition") {
       const input = ev.currentTarget;
+      if (input.value === "") return;
+
       const newText = ws.previousText + input.value;
+      speakIfWordEntered(newText);
       setWs({
         ...ws,
         previousText: newText.slice(
